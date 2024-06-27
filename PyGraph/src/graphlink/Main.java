@@ -1,7 +1,7 @@
 package graphlink;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ExceptionIsEmpty {
         GraphLink<String> graph = new GraphLink<>();
 
         graph.insertVertex("A");
@@ -16,8 +16,8 @@ public class Main {
         graph.insertEdge("C", "D");
         graph.insertEdge("D", "E");
 
-        graph.insertEdgeWeight("A", "D", 5.0);
-        graph.insertEdgeWeight("B", "E", 3.0);
+        graph.insertEdgeWeight("A", "D", 50);
+        graph.insertEdgeWeight("B", "E", 30);
 
         System.out.println("Grafo:");
         System.out.println(graph);

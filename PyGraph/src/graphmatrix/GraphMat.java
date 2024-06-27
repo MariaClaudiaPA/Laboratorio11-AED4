@@ -1,86 +1,149 @@
 package graphmatrix;
 
-public class GraphMat implements Grafo {
+import graphlink.*;
 
-    private int[][] adjMatrix;
-    private int vertices;
+public class GraphMat<E> implements Graph<E> {
 
-    public GraphMat(int vertices) {
-        this.vertices = vertices;
-        this.adjMatrix = new int[vertices][vertices];
+    private int[][] adjacencyMatrix;
+    private ListLinked<Vertex<E>> listVertex;
+    private int numVertices;
+
+    public GraphMat(int numVertices) {
+        this.numVertices = numVertices;
+        this.adjacencyMatrix = new int[numVertices][numVertices];
+        this.listVertex = new ListLinked<>();
     }
 
     @Override
-    public void insertVertex(int v) {
-        if (v >= vertices) {
-            int[][] nuevaMat = new int[v + 1][v + 1];
-            for (int i = 0; i < vertices; i++) {
-                System.arraycopy(adjMatrix[i], 0, nuevaMat[i], 0, vertices);
-            }
-            adjMatrix = nuevaMat;
-            vertices = v + 1;
-        } else if (v < 0) {
-            throw new IllegalArgumentException("No debe ser negativo");
-        }
-    }
-
-    @Override
-    public void insertEdge(int v, int z) {
-        if (v < vertices && z < vertices) {
-            adjMatrix[v][z] = 1;
-            adjMatrix[z][v] = 1;
+    public void insertVertex(E data) {
+        if (searchVertex(data) == null) {
+            Vertex<E> newVertex = new Vertex<>(data);
+            listVertex.insert(newVertex);
         } else {
-            throw new IndexOutOfBoundsException("Vertex indice fuera de rango");
+            System.out.println("Vertex already exists.");
         }
     }
 
     @Override
-    public boolean searchVertex(int v) {
-        return v < vertices;
-    }
+    public void insertEdge(E verOri, E verDes) {
+        if (!searchEdge(verOri, verDes)) {
+            Vertex<E> originVertex = searchVertex(verOri);
+            Vertex<E> destinationVertex = searchVertex(verDes);
 
-    @Override
-    public boolean searchEdge(int v, int z) {
-        if (v < vertices && z < vertices) {
-            return adjMatrix[v][z] == 1;
-        } else {
-            throw new IndexOutOfBoundsException("Vertex indice fuera de rango");
-        }
-    }
-
-    @Override
-    public void dfs(int v) {
-        boolean[] visited = new boolean[vertices];
-        dfsRecursive(v, visited);
-    }
-
-    private void dfsRecursive(int v, boolean[] visited) {
-        visited[v] = true;
-        System.out.print(v + " ");
-
-        for (int i = 0; i < vertices; i++) {
-            if (adjMatrix[v][i] == 1 && !visited[i]) {
-                dfsRecursive(i, visited);
+            if (originVertex != null && destinationVertex != null) {
+                int originIndex = listVertex.search(originVertex);
+                int destinationIndex = listVertex.search(destinationVertex);
+                adjacencyMatrix[originIndex][destinationIndex] = 1; // or set weight as needed
+                adjacencyMatrix[destinationIndex][originIndex] = 1; // for undirected graph
+            } else {
+                System.out.println("One or both vertices not found.");
             }
+        } else {
+            System.out.println("Edge already exists.");
         }
     }
 
-    public static void main(String[] args) {
-        GraphMat graph = new GraphMat(4);
+    @Override
+    public Vertex<E> searchVertex(E data) {
+        Node<Vertex<E>> current = listVertex.getPrimero();
+        while (current != null) {
+            Vertex<E> vertex = current.getValor();
+            if (vertex.getData().equals(data)) {
+                return vertex;
+            }
+            current = current.getSiguiente();
+        }
+        return null;
+    }
 
-        graph.insertVertex(0);
-        graph.insertVertex(1);
-        graph.insertVertex(2);
-        graph.insertVertex(3);
+    @Override
+    public boolean searchEdge(E verOri, E verDes) {
+        Vertex<E> originVertex = searchVertex(verOri);
+        Vertex<E> destinationVertex = searchVertex(verDes);
 
-        graph.insertEdge(0, 1);
-        graph.insertEdge(0, 2);
-        graph.insertEdge(1, 3);
+        if (originVertex != null && destinationVertex != null) {
+            int originIndex = listVertex.search(originVertex);
+            int destinationIndex = listVertex.search(destinationVertex);
+            return adjacencyMatrix[originIndex][destinationIndex] != 0; // Check edge presence
+        }
+        return false;
+    }
 
-        System.out.println(graph.searchVertex(2));
-        System.out.println(graph.searchEdge(1, 2));
+    @Override
+    public void removeVertex(E data) {
+        Vertex<E> vertexToRemove = searchVertex(data);
+        if (vertexToRemove != null) {
+            int indexToRemove = listVertex.search(vertexToRemove);
+            listVertex.removeNode(vertexToRemove);
 
-        System.out.print("DFS: ");
-        graph.dfs(0);
+            // Shift adjacency matrix rows and columns to remove vertex
+            for (int i = indexToRemove; i < numVertices - 1; i++) {
+                for (int j = 0; j < numVertices; j++) {
+                    adjacencyMatrix[i][j] = adjacencyMatrix[i + 1][j];
+                }
+            }
+            for (int j = indexToRemove; j < numVertices - 1; j++) {
+                for (int i = 0; i < numVertices; i++) {
+                    adjacencyMatrix[i][j] = adjacencyMatrix[i][j + 1];
+                }
+            }
+            numVertices--;
+        } else {
+            System.out.println("Vertex not found.");
+        }
+    }
+
+    @Override
+    public void removeEdge(E verOri, E verDes) {
+        Vertex<E> originVertex = searchVertex(verOri);
+        Vertex<E> destinationVertex = searchVertex(verDes);
+
+        if (originVertex != null && destinationVertex != null) {
+            int originIndex = listVertex.search(originVertex);
+            int destinationIndex = listVertex.search(destinationVertex);
+            adjacencyMatrix[originIndex][destinationIndex] = 0;
+            adjacencyMatrix[destinationIndex][originIndex] = 0; // for undirected graph
+        } else {
+            System.out.println("One or both vertices not found.");
+        }
+    }
+
+    public void dfsRecursive(Vertex<E> startVertex) {
+        boolean[] visited = new boolean[numVertices];
+        Vertex<E> foundVertex = searchVertex(startVertex.getData());
+
+        if (foundVertex != null) {
+            dfsRecursive(foundVertex, visited);
+        } else {
+            System.out.println("Start vertex not found.");
+        }
+    }
+
+    private void dfsRecursive(Vertex<E> vertex, boolean[] visited) {
+        visited[listVertex.search((Vertex<E>) vertex.getData())] = true;
+        System.out.println("Visited vertex: " + vertex.getData());
+
+        Node<Edge<E>> currentEdge = vertex.getListAdj().getPrimero();
+        while (currentEdge != null) {
+            Vertex<E> neighborVertex = currentEdge.getValor().getRefDest();
+            int neighborIndex = listVertex.search((Vertex<E>) neighborVertex.getData());
+            if (!visited[neighborIndex]) {
+                dfsRecursive(neighborVertex, visited);
+            }
+            currentEdge = currentEdge.getSiguiente();
+        }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < numVertices; i++) {
+            sb.append("Vertex ").append(i).append(": ");
+            for (int j = 0; j < numVertices; j++) {
+                sb.append(adjacencyMatrix[i][j]).append(" ");
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 }

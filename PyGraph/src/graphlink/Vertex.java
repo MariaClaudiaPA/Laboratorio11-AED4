@@ -1,6 +1,6 @@
 package graphlink;
 
-public class Vertex<E> {
+public class Vertex<E>{
 
     private E data;
     protected ListLinked<Edge<E>> listAdj;
@@ -40,6 +40,14 @@ public class Vertex<E> {
     @Override
     public String toString() {
         return this.data + " ---> " + this.listAdj.toString() + "\n";
+    }
+
+    public ListLinked<Edge<E>> getListAdj() {
+        return listAdj;
+    }
+
+    public void setListAdj(ListLinked<Edge<E>> listAdj) {
+        this.listAdj = listAdj;
     }
 
 }
