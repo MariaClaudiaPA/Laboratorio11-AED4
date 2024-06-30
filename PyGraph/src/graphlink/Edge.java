@@ -8,7 +8,6 @@ public class Edge<E> {
     public Edge(Vertex<E> refDest) {
         this(refDest, -1);
     }
-
     public Edge(Vertex<E> refDest, int weight) {
         this.refDest = refDest;
         this.weight = weight;
@@ -30,6 +29,7 @@ public class Edge<E> {
         this.weight = weight;
     }
 
+   
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Edge<?>) {
@@ -47,5 +47,4 @@ public class Edge<E> {
             return refDest.getData() + ", ";
         }
     }
-
 }

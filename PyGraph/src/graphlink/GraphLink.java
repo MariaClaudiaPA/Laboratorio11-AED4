@@ -1,514 +1,388 @@
 package graphlink;
 
+import hash.*;
+
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+
+import listlinked.*;
 
 public class GraphLink<E> implements Graph<E> {
 
     protected ListLinked<Vertex<E>> listVertex;
-    protected HashMap<Vertex<E>, HashMap<Vertex<E>, Integer>> distances;
-    protected HashMap<Vertex<E>, HashMap<Vertex<E>, Vertex<E>>> predecessors;
 
     public GraphLink() {
         listVertex = new ListLinked<>();
-        distances = new HashMap<>();
-        predecessors = new HashMap<>();
     }
 
     @Override
     public void insertVertex(E data) {
         Vertex<E> newVertex = new Vertex<>(data);
-        listVertex.insert(newVertex);
+        if (listVertex.search(newVertex) == -1) {
+            listVertex.insert(newVertex);
+        }
     }
 
     @Override
     public void insertEdge(E verOri, E verDes) {
-        Vertex<E> originVertex = searchVertex(verOri);
-        Vertex<E> destinationVertex = searchVertex(verDes);
+        Vertex<E> vOri = null;
+        Vertex<E> vDes = null;
 
-        if (originVertex == null || destinationVertex == null) {
-            System.out.println("Uno o ambos vértices no fueron encontrados");
-            return;
-        }
+        Node<Vertex<E>> nodeOri = listVertex.getPrimero();
+        Node<Vertex<E>> nodeDes = listVertex.getPrimero();
 
-        Edge<E> newEdge = new Edge<>(destinationVertex);
-        originVertex.listAdj.insert(newEdge);
-    }
-
-    @Override
-    public Vertex<E> searchVertex(E data) {
-        int index = listVertex.search(new Vertex<>(data));
-        if (index == -1) {
-            return null;
-        }
-        Node<Vertex<E>> currentNode = listVertex.primero;
-        for (int i = 0; i < index; i++) {
-            currentNode = currentNode.getSiguiente();
-        }
-        return currentNode.getValor();
-    }
-
-    @Override
-    public boolean searchEdge(E verOri, E verDes) {
-        Vertex<E> originVertex = searchVertex(verOri);
-        Vertex<E> destinationVertex = searchVertex(verDes);
-
-        if (originVertex == null || destinationVertex == null) {
-            return false;
-        }
-        Edge<E> searchEdge = new Edge<>(destinationVertex);
-        int index = originVertex.listAdj.search(searchEdge);
-        return index != -1;
-    }
-
-    @Override
-    public void removeVertex(E data) {
-        Node<Vertex<E>> currentVertexNode = listVertex.primero;
-        while (currentVertexNode != null) {
-            Vertex<E> currentVertex = currentVertexNode.getValor();
-            if (currentVertex.getData().equals(data)) {
-                listVertex.removeNode(currentVertex);
-                break;
+        while (nodeOri != null && vOri == null) {
+            if (nodeOri.getValor().getData().equals(verOri)) {
+                vOri = nodeOri.getValor();
             }
-            currentVertexNode = currentVertexNode.getSiguiente();
+            nodeOri = nodeOri.getSiguiente();
         }
 
-        currentVertexNode = listVertex.primero;
-        while (currentVertexNode != null) {
-            Vertex<E> currentVertex = currentVertexNode.getValor();
-            Node<Edge<E>> currentEdge = currentVertex.listAdj.primero;
-            while (currentEdge != null) {
-                if (currentEdge.getValor().refDest.getData().equals(data)) {
-                    currentVertex.listAdj.removeNode(currentEdge.getValor());
-                }
-                currentEdge = currentEdge.getSiguiente();
+        while (nodeDes != null && vDes == null) {
+            if (nodeDes.getValor().getData().equals(verDes)) {
+                vDes = nodeDes.getValor();
             }
-            currentVertexNode = currentVertexNode.getSiguiente();
-        }
-    }
-
-    @Override
-    public void removeEdge(E verOri, E verDes) {
-        Vertex<E> originVertex = searchVertex(verOri);
-        Vertex<E> destinationVertex = searchVertex(verDes);
-
-        if (originVertex == null || destinationVertex == null) {
-            return;
+            nodeDes = nodeDes.getSiguiente();
         }
 
-        Node<Edge<E>> currentEdge = originVertex.listAdj.primero;
-        while (currentEdge != null) {
-            if (currentEdge.getValor().refDest.equals(destinationVertex)) {
-                originVertex.listAdj.removeNode(currentEdge.getValor());
-                return;
+        if (vOri != null && vDes != null) {
+            Edge<E> edgeOriToDes = new Edge<>(vDes);
+            Edge<E> edgeDesToOri = new Edge<>(vOri);
+
+            if (vOri.listAdj.search(edgeOriToDes) == -1) {
+                vOri.listAdj.insert(edgeOriToDes);
             }
-            currentEdge = currentEdge.getSiguiente();
-        }
-    }
-
-    public void dfs(E data) throws ExceptionIsFull, ExceptionIsEmpty {
-        Vertex<E> startVertex = searchVertex(data);
-        if (startVertex == null) {
-            System.out.println("Vertice no encontrado");
-            return;
-        }
-
-        Stack<Vertex<E>> stack = new StackLink<>();
-        stack.push(startVertex);
-
-        while (!stack.isEmpty()) {
-            Vertex<E> vertex = stack.pop();
-            if (!vertex.isVisited()) {
-                vertex.setVisited(true);
-                System.out.println(vertex.getData());
-
-                Node<Edge<E>> currentEdge = vertex.listAdj.primero;
-                while (currentEdge != null) {
-                    Vertex<E> neighborVertex = currentEdge.getValor().refDest;
-                    if (!neighborVertex.isVisited()) {
-                        stack.push(neighborVertex);
-                    }
-                    currentEdge = currentEdge.getSiguiente();
-                }
+            if (vDes.listAdj.search(edgeDesToOri) == -1) {
+                vDes.listAdj.insert(edgeDesToOri);
             }
-        }
-    }
-
-    public void bfs(E data) throws ExceptionIsEmpty {
-        Vertex<E> startVertex = searchVertex(data);
-        if (startVertex == null) {
-            System.out.println("Vertice no encontrado");
-            return;
-        }
-        System.out.println("Iniciando BFS desde: " + startVertex.getData());
-
-        Queue<Vertex<E>> queue = new QueueLink<>();
-        queue.enqueue(startVertex);
-
-        while (!queue.isEmpty()) {
-            Vertex<E> vertex = queue.dequeue();
-            if (!vertex.isVisited()) {
-                vertex.setVisited(true);
-                System.out.println("Visitando vértice: " + vertex.getData());
-
-                Node<Edge<E>> currentEdge = vertex.listAdj.primero;
-                while (currentEdge != null) {
-                    Vertex<E> neighborVertex = currentEdge.getValor().refDest;
-                    if (!neighborVertex.isVisited()) {
-                        queue.enqueue(neighborVertex);
-                        System.out.println("Encolando vecino: " + neighborVertex.getData());
-                    }
-                    currentEdge = currentEdge.getSiguiente();
-                }
-            }
-        }
-    }
-
-    public ArrayList<E> bfsPath(E verOri, E verDes) throws ExceptionIsEmpty {
-        Vertex<E> startVertex = searchVertex(verOri);
-        Vertex<E> endVertex = searchVertex(verDes);
-
-        if (startVertex == null || endVertex == null) {
-            System.out.println("Uno o ambos vértices no fueron encontrados");
-            return null;
-        }
-
-        Queue<Vertex<E>> queue = new QueueLink<>();
-        HashMap<Integer, Vertex<E>> hashTable = new HashMap<>();
-        ArrayList<E> path = new ArrayList<>();
-
-        queue.enqueue(startVertex);
-        hashTable.put(startVertex.hashCode(), startVertex);
-
-        while (!queue.isEmpty()) {
-            Vertex<E> vertex = queue.dequeue();
-            if (vertex.equals(endVertex)) {
-                break;
-            }
-
-            Node<Edge<E>> currentEdge = vertex.listAdj.primero;
-            while (currentEdge != null) {
-                Vertex<E> neighborVertex = currentEdge.getValor().refDest;
-                if (!hashTable.containsKey(neighborVertex.hashCode())) {
-                    queue.enqueue(neighborVertex);
-                    hashTable.put(neighborVertex.hashCode(), neighborVertex);
-                }
-                currentEdge = currentEdge.getSiguiente();
-            }
-        }
-
-        Vertex<E> step = endVertex;
-        while (step != null && !step.equals(startVertex)) {
-            path.add(0, step.getData());
-            step = encontrarPredecesor(step, hashTable);
-        }
-        path.add(0, startVertex.getData());
-
-        if (path.isEmpty()) {
-            return null;
         } else {
-            return path;
-        }
-
-    }
-
-    private Vertex<E> encontrarPredecesor(Vertex<E> vertex, HashMap<Integer, Vertex<E>> hashTable) {
-        for (Vertex<E> v : hashTable.values()) {
-            Node<Edge<E>> currentEdge = v.listAdj.primero;
-            while (currentEdge != null) {
-                if (currentEdge.getValor().refDest.equals(vertex)) {
-                    return v;
-                }
-                currentEdge = currentEdge.getSiguiente();
-            }
-        }
-        return null;
-    }
-
-    public void insertEdgeWeight(E verOri, E verDes, int weight) {
-        Vertex<E> origin = searchVertex(verOri);
-        Vertex<E> destination = searchVertex(verDes);
-
-        if (origin != null && destination != null) {
-            origin.listAdj.insertFirst(new Edge<>(destination, weight));
-            destination.listAdj.insertFirst(new Edge<>(origin, weight));
+            throw new IllegalArgumentException("Uno o ambos vértices no existen.");
         }
     }
 
-    // EJ 2 Y 4A
-    public void initializeDistances() {
-        Node<Vertex<E>> node = listVertex.primero;
-        while (node != null) {
-            Vertex<E> v = node.getValor();
-            distances.put(v, new HashMap<>());
-            predecessors.put(v, new HashMap<>());
-
-            Node<Vertex<E>> node2 = listVertex.primero;
-            while (node2 != null) {
-                Vertex<E> u = node2.getValor();
-                if (v.equals(u)) {
-                    distances.get(v).put(u, 0);
-                } else {
-                    distances.get(v).put(u, Integer.MAX_VALUE);
-                }
-                predecessors.get(v).put(u, null);
-                node2 = node2.getSiguiente();
-            }
-
-            Node<Edge<E>> edgeNode = v.listAdj.primero;
-            while (edgeNode != null) {
-                Edge<E> edge = edgeNode.getValor();
-                Vertex<E> neighbor = edge.refDest;
-                distances.get(v).put(neighbor, edge.getWeight());
-                distances.computeIfAbsent(neighbor, k -> new HashMap<>()).put(v, edge.getWeight());
-                predecessors.get(v).put(neighbor, v);
-                edgeNode = edgeNode.getSiguiente();
-            }
-
-            node = node.getSiguiente();
-        }
-    }
-
-    public void floydWarshall() {
-        initializeDistances();
-
-        Node<Vertex<E>> nodeK = listVertex.primero;
-        while (nodeK != null) {
-            Vertex<E> k = nodeK.getValor();
-
-            Node<Vertex<E>> nodeI = listVertex.primero;
-            while (nodeI != null) {
-                Vertex<E> i = nodeI.getValor();
-
-                Node<Vertex<E>> nodeJ = listVertex.primero;
-                while (nodeJ != null) {
-                    Vertex<E> j = nodeJ.getValor();
-
-                    if (distances.get(i).get(k) < Integer.MAX_VALUE
-                            && distances.get(k).get(j) < Integer.MAX_VALUE
-                            && distances.get(i).get(k) + distances.get(k).get(j) < distances.get(i).get(j)) {
-
-                        distances.get(i).put(j, distances.get(i).get(k) + distances.get(k).get(j));
-                        predecessors.get(i).put(j, predecessors.get(k).get(j));
-                    }
-
-                    nodeJ = nodeJ.getSiguiente();
-                }
-
-                nodeI = nodeI.getSiguiente();
-            }
-
-            nodeK = nodeK.getSiguiente();
-        }
-    }
-
-    public ArrayList<E> shortPath(E verOri, E verDes) {
-        Vertex<E> startVertex = searchVertex(verOri);
-        Vertex<E> endVertex = searchVertex(verDes);
-
-        if (startVertex == null || endVertex == null) {
-            System.out.println("Uno o ambos vértices no fueron encontrados");
-            return null;
-        }
-
-        if (distances.isEmpty()) {
-            floydWarshall();
-        }
-
-        ArrayList<E> path = new ArrayList<>();
-        Vertex<E> step = endVertex;
-        while (step != null && !step.equals(startVertex)) {
-            path.add(0, step.getData());
-            step = predecessors.get(startVertex).get(step);
-        }
-        path.add(0, startVertex.getData());
-
-        if (path.isEmpty()) {
-            return null;
-        } else {
-            return path;
-        }
-    }
-
-    //EJ4 B
-    public void shortPathDijkstra(E startData) throws ExceptionIsEmpty {
-        Vertex<E> startVertex = searchVertex(startData);
-        if (startVertex == null) {
-            System.out.println("Vértice de inicio no encontrado");
-            return;
-        }
-        PriorityQueue<Pair<Vertex<E>, Integer>, Integer> minHeap = new PriorityQueueLinkSort<>(
-                (pair1, pair2) -> Integer.compare(pair1.y, pair2.y)
-        );
-
-        HashMap<Vertex<E>, Integer> distanceMap = new HashMap<>();
-        HashMap<Vertex<E>, Vertex<E>> predecessorMap = new HashMap<>();
-
-        for (Node<Vertex<E>> node = listVertex.primero; node != null; node = node.getSiguiente()) {
-            Vertex<E> vertex = node.getValor();
-            distanceMap.put(vertex, Integer.MAX_VALUE);
-            predecessorMap.put(vertex, null);
-        }
-        distanceMap.put(startVertex, 0);
-
-        minHeap.enqueue(new Pair<>(startVertex, 0), 0);
-
-        while (!minHeap.isEmpty()) {
-            Pair<Vertex<E>, Integer> pair = minHeap.dequeue();
-            Vertex<E> currentVertex = pair.x;
-            int currentDistance = pair.y;
-
-            Node<Edge<E>> edgeNode = currentVertex.listAdj.primero;
-            while (edgeNode != null) {
-                Edge<E> edge = edgeNode.getValor();
-                Vertex<E> neighborVertex = edge.refDest;
-                int weight = edge.getWeight();
-                int newDistance = currentDistance + weight;
-
-                if (newDistance < distanceMap.get(neighborVertex)) {
-                    distanceMap.put(neighborVertex, newDistance);
-                    predecessorMap.put(neighborVertex, currentVertex);
-                    minHeap.enqueue(new Pair<>(neighborVertex, newDistance), newDistance);
-                }
-
-                edgeNode = edgeNode.getSiguiente();
-            }
-        }
-
-        distances.put(startVertex, distanceMap);
-        predecessors.put(startVertex, predecessorMap);
-    }
-
-    public ArrayList<E> getPathTo(Vertex<E> startVertex, Vertex<E> endVertex) {
-        ArrayList<E> path = new ArrayList<>();
-        if (startVertex == null || endVertex == null) {
-            System.out.println("Uno o ambos vértices no fueron encontrados");
-            return path;
-        }
-
-        Vertex<E> step = endVertex;
-        while (step != null && !step.equals(startVertex)) {
-            path.add(0, step.getData());
-            step = predecessors.get(startVertex).get(step);
-        }
-        path.add(0, startVertex.getData());
-
-        return path.isEmpty() ? null : path;
-    }
-
-    public void insertEdgeWeighted(E verOri, E verDes, int weight) {
-        Vertex<E> originVertex = searchVertex(verOri);
-        Vertex<E> destinationVertex = searchVertex(verDes);
-
-        if (originVertex == null || destinationVertex == null) {
-            System.out.println("Uno o ambos vértices no fueron encontrados");
-            return;
-        }
-
-        Edge<E> newEdge = new Edge<>(destinationVertex, weight);
-        originVertex.listAdj.insert(newEdge);
-    }
-
-    //EJ 5A
-    public GraphLink<E> primMST() throws ExceptionIsEmpty {
-        GraphLink<E> mst = new GraphLink<>();
-
-        if (listVertex.isEmpty()) {
-            System.out.println("El grafo está vacío. No se puede aplicar Prim.");
-            return mst;
-        }
-
-        Set<Vertex<E>> visitedVertices = new HashSet<>();
-
-        PriorityQueue<Pair<Vertex<E>, Edge<E>>, Integer> minHeap = new PriorityQueueLinkSort<>(
-                Comparator.comparingInt(p -> p.y)
-        );
-
-        Vertex<E> startVertex = listVertex.primero.getValor();
-
-        visitedVertices.add(startVertex);
-        mst.insertVertex(startVertex.getData());
-
-        Node<Edge<E>> edgeNode = startVertex.listAdj.primero;
-        while (edgeNode != null) {
-            minHeap.enqueue(new Pair<>(startVertex, edgeNode.getValor()), edgeNode.getValor().getWeight());
-            edgeNode = edgeNode.getSiguiente();
-        }
-
-        while (!minHeap.isEmpty() && visitedVertices.size() < listVertex.length()) {
-            Pair<Vertex<E>, Edge<E>> pair = minHeap.dequeue();
-            Vertex<E> currentVertex = pair.x;
-            Edge<E> currentEdge = pair.y;
-
-            Vertex<E> nextVertex = currentEdge.refDest;
-
-            if (!visitedVertices.contains(nextVertex)) {
-                visitedVertices.add(nextVertex);
-                mst.insertVertex(nextVertex.getData());
-                mst.insertEdgeWeighted(currentVertex.getData(), nextVertex.getData(), currentEdge.getWeight());
-
-                edgeNode = nextVertex.listAdj.primero;
-                while (edgeNode != null) {
-                    minHeap.enqueue(new Pair<>(nextVertex, edgeNode.getValor()), edgeNode.getValor().getWeight());
-                    edgeNode = edgeNode.getSiguiente();
-                }
-            }
-        }
-
-        return mst;
-    }
-
-//    public GraphLink<E> kruskalMST() throws ExceptionIsEmpty {
-//        GraphLink<E> mst = new GraphLink<>();
-//
-//        if (listVertex.isEmpty()) {
-//            System.out.println("El grafo está vacío. No se puede aplicar Kruskal.");
-//            return mst;
-//        }
-//
-//        List<Edge<E>> allEdges = new ArrayList<>();
-//
-//        Node<Vertex<E>> vertexNode = listVertex.primero;
-//        while (vertexNode != null) {
-//            Vertex<E> vertex = vertexNode.getValor();
-//            Node<Edge<E>> edgeNode = vertex.listAdj.primero;
-//            while (edgeNode != null) {
-//                Edge<E> edge = edgeNode.getValor();
-//                allEdges.add(edge);
-//                edgeNode = edgeNode.getSiguiente();
-//            }
-//            vertexNode = vertexNode.getSiguiente();
-//        }
-//
-//        Collections.sort(allEdges, Comparator.comparingInt(Edge::getWeight));
-//
-//        Set<Vertex<E>> addedVertices = new HashSet<>();
-//
-//        for (Edge<E> edge : allEdges) {
-//            Vertex<E> u = edge.getRefDest(); // Primer vértice de la arista
-//            Vertex<E> v = edge.getRefOrigin(); // Segundo vértice de la arista
-//
-//            if (!addedVertices.contains(u) || !addedVertices.contains(v)) {
-//                if (!addedVertices.contains(u)) {
-//                    mst.insertVertex(u.getData());
-//                    addedVertices.add(u);
-//                }
-//                if (!addedVertices.contains(v)) {
-//                    mst.insertVertex(v.getData());
-//                    addedVertices.add(v);
-//                }
-//                mst.insertEdgeWeighted(u.getData(), v.getData(), edge.getWeight());
-//            }
-//        }
-//
-//        return mst;
-//    }
 
     @Override
     public String toString() {
         return this.listVertex.toString();
+    }
+
+    @Override
+    public boolean searchVertex(Vertex<E> v) {
+        return listVertex.search(v) != -1;
+    }
+
+    @Override
+    public boolean searchEdge(Vertex<E> v, Vertex<E> z) {
+        Edge<E> edgeVToZ = new Edge<>(z);
+        Edge<E> edgeZToV = new Edge<>(v);
+
+        int indexV = listVertex.search(v);
+        int indexZ = listVertex.search(z);
+
+        if (indexV != -1 && indexZ != -1) {
+            Vertex<E> vertexV = listVertex.getNodeAt(indexV).getValor();
+            Vertex<E> vertexZ = listVertex.getNodeAt(indexZ).getValor();
+
+            int indexVToZ = vertexV.listAdj.search(edgeVToZ);
+            int indexZToV = vertexZ.listAdj.search(edgeZToV);
+
+            return indexVToZ != -1 && indexZToV != -1;
+        }
+        return false;
+    }
+
+
+    @Override
+    public void removeVertex(Vertex<E> v) {
+        if (!searchVertex(v)) {
+            throw new IllegalArgumentException("El vértice no existe en el grafo.");
+        }
+
+        listVertex.removeNode(v);
+
+        Node<Vertex<E>> currentVertex = listVertex.getPrimero();
+        while (currentVertex != null) {
+            ListLinked<Edge<E>> adjList = currentVertex.getValor().listAdj;
+
+            Edge<E> edgeToRemove = new Edge<>(v);
+            adjList.removeNode(edgeToRemove);
+            currentVertex = currentVertex.getSiguiente();
+        }
+    }
+
+    @Override
+    public void removeEdge(Vertex<E> v, Vertex<E> z) {
+        if (!searchEdge(v, z)) {
+            throw new IllegalArgumentException("La arista entre los vértices no existe en el grafo.");
+        }
+
+        Edge<E> edgeVToZ = new Edge<>(z);
+        Edge<E> edgeZToV = new Edge<>(v);
+
+        v.listAdj.removeNode(edgeVToZ);
+        z.listAdj.removeNode(edgeZToV);
+    }
+
+    public void dfs(Vertex<E> v) {
+        if (!searchVertex(v)) {
+            throw new IllegalArgumentException("El vértice no existe en el grafo.");
+        }
+        resetVisited();
+        dfsRecursive(v);
+    }
+
+    private void dfsRecursive(Vertex<E> v) {
+        v.visit();
+        System.out.println(v.getData());
+
+        ListLinked<Edge<E>> adjList = v.listAdj;
+        Node<Edge<E>> current = adjList.getPrimero();
+
+        while (current != null) {
+            Vertex<E> neighbor = current.getValor().refDest;
+            if (!neighbor.isVisited()) {
+                dfsRecursive(neighbor);
+            }
+            current = current.getSiguiente();
+        }
+    }
+
+    private void resetVisited() {
+        Node<Vertex<E>> current = listVertex.getPrimero();
+        while (current != null) {
+            current.getValor().unvisit();
+            current = current.getSiguiente();
+        }
+    }
+
+    public int countVertices() {
+        return listVertex.length();
+    }
+
+    public void bfs(Vertex<E> v) throws ExceptionIsEmpty {
+        if (!searchVertex(v)) {
+            throw new IllegalArgumentException("El vértice no existe en el grafo.");
+        }
+
+        resetVisited();
+        QueueLink<Vertex<E>> queue = new QueueLink<>();
+        v.visit();
+        queue.enqueue(v);
+
+        while (!queue.isEmpty()) {
+            Vertex<E> currentVertex = queue.dequeue();
+            System.out.println(currentVertex.getData());
+
+            ListLinked<Edge<E>> adjList = currentVertex.listAdj;
+            Node<Edge<E>> current = adjList.getPrimero();
+
+            while (current != null) {
+                Vertex<E> neighbor = current.getValor().refDest;
+                if (!neighbor.isVisited()) {
+                    neighbor.visit();
+                    queue.enqueue(neighbor);
+                }
+                current = current.getSiguiente();
+            }
+        }
+    }
+
+    public ArrayList<Vertex<E>> bfsPath(Vertex<E> v, Vertex<E> z) throws ExceptionIsEmpty {
+        if (!searchVertex(v) || !searchVertex(z)) {
+            throw new IllegalArgumentException("Uno o ambos vértices no existen en el grafo.");
+        }
+
+        resetVisited();
+        QueueLink<Vertex<E>> queue = new QueueLink<>();
+        HashA<Vertex<E>> parentHash = new HashA<>(countVertices());
+
+        v.visit();
+        queue.enqueue(v);
+        parentHash.insert(v.hashCode(), null);
+
+        while (!queue.isEmpty()) {
+            Vertex<E> currentVertex = queue.dequeue();
+
+            if (currentVertex.equals(z)) {
+                ArrayList<Vertex<E>> path = new ArrayList<>();
+                path.add(z);
+
+                Vertex<E> traceVertex = z;
+                while (!traceVertex.equals(v)) {
+                    Register<Vertex<E>> parentRegister = parentHash.search(traceVertex.hashCode());
+                    if (parentRegister != null) {
+                        traceVertex = parentRegister.getValue();
+                        path.add(traceVertex);
+                    } else {
+                        break;
+                    }
+                }
+
+                ArrayList<Vertex<E>> reversedPath = new ArrayList<>();
+                for (int i = path.size() - 1; i >= 0; i--) {
+                    reversedPath.add(path.get(i));
+                }
+                return reversedPath;
+            }
+
+            ListLinked<Edge<E>> adjList = currentVertex.listAdj;
+            Node<Edge<E>> current = adjList.getPrimero();
+
+            while (current != null) {
+                Vertex<E> neighbor = current.getValor().refDest;
+                if (!neighbor.isVisited()) {
+                    neighbor.visit();
+                    queue.enqueue(neighbor);
+                    parentHash.insert(neighbor.hashCode(), new Register<>(neighbor.hashCode(), currentVertex));
+                }
+                current = current.getSiguiente();
+            }
+        }
+
+        return null;
+    }
+
+    public void insertEdgeWeight(E verOri, E verDes, int weight) {
+        Vertex<E> vOri = new Vertex<>(verOri);
+        Vertex<E> vDes = new Vertex<>(verDes);
+
+        int indexOri = listVertex.search(vOri);
+        int indexDes = listVertex.search(vDes);
+
+        if (indexOri != -1 && indexDes != -1) {
+            Vertex<E> vertexOri = listVertex.getNodeAt(indexOri).getValor();
+            Vertex<E> vertexDes = listVertex.getNodeAt(indexDes).getValor();
+
+            Edge<E> edgeOriToDes = new Edge<>(vertexDes, weight);
+            Edge<E> edgeDesToOri = new Edge<>(vertexOri, weight);
+
+            if (vertexOri.listAdj.search(edgeOriToDes) == -1) {
+                vertexOri.listAdj.insert(edgeOriToDes);
+            }
+            if (vertexDes.listAdj.search(edgeDesToOri) == -1) {
+                vertexDes.listAdj.insert(edgeDesToOri);
+            }
+        } else {
+            throw new IllegalArgumentException("Uno o ambos vértices no existen.");
+        }
+    }
+
+    public ArrayList<Vertex<E>> shortPath(Vertex<E> v, Vertex<E> z) throws ExceptionIsEmpty {
+        if (!searchVertex(v) || !searchVertex(z)) {
+            throw new IllegalArgumentException("Uno o ambos vértices no existen en el grafo.");
+        }
+
+        HashA<Integer> distanceHash = new HashA<>(countVertices());
+        HashA<Vertex<E>> parentHash = new HashA<>(countVertices());
+
+        PriorityQueue<Vertex<E>, Integer> pq = new PriorityQueueLinkSort<>();
+
+        Node<Vertex<E>> currentVertexNode = listVertex.getPrimero();
+        while (currentVertexNode != null) {
+            Vertex<E> vertex = currentVertexNode.getValor();
+            if (vertex.equals(v)) {
+                distanceHash.insert(vertex.hashCode(), new Register<>(vertex.hashCode(), 0));
+                pq.enqueue(vertex, 0);
+            } else {
+                distanceHash.insert(vertex.hashCode(), new Register<>(vertex.hashCode(), Integer.MAX_VALUE));
+            }
+            parentHash.insert(vertex.hashCode(), null);
+            currentVertexNode = currentVertexNode.getSiguiente();
+        }
+
+        while (!pq.isEmpty()) {
+            Vertex<E> currentVertex = pq.dequeue();
+            Register<Integer> currentDistanceReg = distanceHash.search(currentVertex.hashCode());
+            if (currentDistanceReg == null) {
+                System.err.println("Distancia no encontrada para el vértice: " + currentVertex);
+                continue;
+            }
+            int currentDistance = currentDistanceReg.getValue();
+
+            ListLinked<Edge<E>> adjList = currentVertex.listAdj;
+            Node<Edge<E>> currentEdgeNode = adjList.getPrimero();
+            while (currentEdgeNode != null) {
+                Vertex<E> neighbor = currentEdgeNode.getValor().refDest;
+                int edgeWeight = currentEdgeNode.getValor().getWeight();
+                int newDist = currentDistance + edgeWeight;
+
+                Register<Integer> neighborDistReg = distanceHash.search(neighbor.hashCode());
+                if (neighborDistReg != null) {
+                    int neighborDist = neighborDistReg.getValue();
+                    if (newDist < neighborDist) {
+                        pq.enqueue(neighbor, newDist);
+                        neighborDistReg.setValue(newDist);
+                        parentHash.insert(neighbor.hashCode(), new Register<>(neighbor.hashCode(), currentVertex));
+                    }
+                }
+
+                currentEdgeNode = currentEdgeNode.getSiguiente();
+            }
+        }
+
+        ArrayList<Vertex<E>> path = new ArrayList<>();
+        Vertex<E> traceVertex = z;
+
+        while (traceVertex != null) {
+            path.add(traceVertex);
+            if (traceVertex.equals(v)) {
+                break;
+            }
+            Register<Vertex<E>> parentRegister = parentHash.search(traceVertex.hashCode());
+            if (parentRegister == null) {
+                System.err.println("No se encontró el padre para el vértice: " + traceVertex);
+                break;
+            }
+            traceVertex = parentRegister.getValue();
+        }
+
+        int left = 0;
+        int right = path.size() - 1;
+        while (left < right) {
+            Vertex<E> temp = path.get(left);
+            path.set(left, path.get(right));
+            path.set(right, temp);
+            left++;
+            right--;
+        }
+
+        return path;
+    }
+
+    public ArrayList<Edge<E>> primMST() throws ExceptionIsEmpty {
+        if (listVertex.isEmpty()) {
+            throw new IllegalArgumentException("El grafo está vacío.");
+        }
+
+        resetVisited();
+        PriorityQueue<Edge<E>, Integer> pq = new PriorityQueueLinkSort<>();
+        ArrayList<Edge<E>> mstEdges = new ArrayList<>();
+        Vertex<E> startVertex = listVertex.getPrimero().getValor();
+
+        startVertex.visit();
+        Node<Edge<E>> currentEdgeNode = startVertex.listAdj.getPrimero();
+        while (currentEdgeNode != null) {
+            pq.enqueue(currentEdgeNode.getValor(), currentEdgeNode.getValor().getWeight());
+            currentEdgeNode = currentEdgeNode.getSiguiente();
+        }
+
+        while (!pq.isEmpty()) {
+            Edge<E> minEdge = pq.dequeue();
+            Vertex<E> destVertex = minEdge.refDest;
+
+            if (!destVertex.isVisited()) {
+                mstEdges.add(minEdge);
+                destVertex.visit();
+
+                currentEdgeNode = destVertex.listAdj.getPrimero();
+                while (currentEdgeNode != null) {
+                    Edge<E> edge = currentEdgeNode.getValor();
+                    if (!edge.refDest.isVisited()) {
+                        pq.enqueue(edge, edge.getWeight());
+                    }
+                    currentEdgeNode = currentEdgeNode.getSiguiente();
+                }
+            }
+        }
+        return mstEdges;
     }
 }

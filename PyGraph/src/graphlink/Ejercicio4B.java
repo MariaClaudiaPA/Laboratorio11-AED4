@@ -1,41 +1,36 @@
 package graphlink;
 
 import java.util.ArrayList;
+import listlinked.*;
 
 public class Ejercicio4B {
 
-    public static void main(String[] args) throws ExceptionIsEmpty {
-        // Crear un grafo
-        GraphLink<Integer> graph = new GraphLink<>();
+    public static void main(String[] args) {
+        GraphLink<String> graph = new GraphLink<>();
 
-        graph.insertVertex(1);
-        graph.insertVertex(2);
-        graph.insertVertex(3);
-        graph.insertVertex(4);
+        graph.insertVertex("A");
+        graph.insertVertex("B");
+        graph.insertVertex("C");
+        graph.insertVertex("D");
+        graph.insertVertex("E");
 
-        graph.insertEdgeWeight(1, 2, 1);  // V1 <-> V2
-        graph.insertEdgeWeight(1, 3, 4);  // V1 <-> V3
-        graph.insertEdgeWeight(2, 3, 2);  // V2 <-> V3
-        graph.insertEdgeWeight(3, 4, 5);  // V3 <-> V4
-
-        int startVertexData = 1;  
-        graph.shortPathDijkstra(startVertexData);
-
-        for (int i = 1; i <= 4; i++) {
-            if (i != startVertexData) {
-                Vertex<Integer> startVertex = graph.searchVertex(startVertexData);
-                Vertex<Integer> endVertex = graph.searchVertex(i);
-                ArrayList<Integer> path = graph.getPathTo(startVertex, endVertex);
-                int distance = graph.distances.get(startVertex).get(endVertex);
-
-                System.out.print("Camino más corto desde " + startVertexData + " hasta " + i + ": ");
-                if (path != null) {
-                    System.out.print(path + ", Distancia: " + distance);
-                } else {
-                    System.out.print("No se encontró camino");
-                }
-                System.out.println();
+        graph.insertEdgeWeight("A", "B", 2);
+        graph.insertEdgeWeight("A", "C", 4);
+        graph.insertEdgeWeight("B", "C", 1);
+        graph.insertEdgeWeight("B", "D", 3);
+        graph.insertEdgeWeight("C", "E", 3);
+        graph.insertEdgeWeight("D", "E", 1);
+        System.out.println("Grafo:");
+        System.out.println(graph);
+        try {
+            System.out.println("Camino más corto:");
+            ArrayList<Vertex<String>> shortestPath = graph.shortPath(new Vertex<>("A"), new Vertex<>("E"));
+            for (Vertex<String> vertex : shortestPath) {
+                System.out.print(vertex.getData() + " ");
             }
+            System.out.println();
+        } catch (ExceptionIsEmpty e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
 }

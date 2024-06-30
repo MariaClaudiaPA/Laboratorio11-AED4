@@ -1,6 +1,7 @@
 package graphlink;
+import listlinked.*;
 
-public class Vertex<E>{
+public class Vertex<E> {
 
     private E data;
     protected ListLinked<Edge<E>> listAdj;
@@ -8,46 +9,43 @@ public class Vertex<E>{
 
     public Vertex(E data) {
         this.data = data;
-        listAdj = new ListLinked<>();
+        this.listAdj = new ListLinked<>();
         this.visited = false;
-    }
-
-    public boolean isVisited() {
-        return visited;
-    }
-
-    public void setVisited(boolean visited) {
-        this.visited = visited;
     }
 
     public E getData() {
         return data;
     }
-
-    public void setData(E data) {
-        this.data = data;
+    public ListLinked<Edge<E>> getListAdj() {
+        return listAdj;
     }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof Vertex<?>) {
-            Vertex<E> v = (Vertex<E>) obj;
-            return this.data.equals(v.data);
-        }
-        return false;
+    public boolean isVisited() {
+        return visited;
+    }
+    public void visit() {
+        visited = true;
+    }
+    public void unvisit() {
+        visited = false;
     }
 
     @Override
     public String toString() {
-        return this.data + " ---> " + this.listAdj.toString() + "\n";
+        return data.toString();
     }
 
-    public ListLinked<Edge<E>> getListAdj() {
-        return listAdj;
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Vertex<?> vertex = (Vertex<?>) obj;
+        return data.equals(vertex.data);
     }
 
-    public void setListAdj(ListLinked<Edge<E>> listAdj) {
-        this.listAdj = listAdj;
+    @Override
+    public int hashCode() {
+        return data.hashCode();
     }
+
 
 }

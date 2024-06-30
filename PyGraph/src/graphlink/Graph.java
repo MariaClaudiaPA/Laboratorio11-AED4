@@ -6,12 +6,12 @@ public interface Graph<E> {
 
     void insertEdge(E verOri, E verDes);
 
-    Vertex<E> searchVertex(E data);
+    boolean searchVertex(Vertex<E> v);
 
-    boolean searchEdge(E verOri, E verDes);
+    public boolean searchEdge(Vertex<E> v, Vertex<E> z);
 
-    void removeVertex(E data);
+    void removeVertex(Vertex<E> v);
 
-    void removeEdge(E verOri, E verDes);
+    void removeEdge(Vertex<E> v, Vertex<E> z);
 
 }

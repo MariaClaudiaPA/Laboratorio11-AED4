@@ -1,30 +1,33 @@
 package graphlink;
 
+import listlinked.ExceptionIsEmpty;
+
+import java.util.ArrayList;
+
 public class Ejercicio5A {
-
     public static void main(String[] args) {
-        GraphLink<Integer> graph = new GraphLink<>();
+        GraphLink<String> graph = new GraphLink<>();
+        graph.insertVertex("A");
+        graph.insertVertex("B");
+        graph.insertVertex("C");
+        graph.insertVertex("D");
+        graph.insertVertex("E");
 
-        graph.insertVertex(1);
-        graph.insertVertex(2);
-        graph.insertVertex(3);
-        graph.insertVertex(4);
-        graph.insertVertex(5);
-
-        graph.insertEdgeWeighted(1, 2, 2); // Vértices 1 y 2, peso 2
-        graph.insertEdgeWeighted(1, 3, 4); // Vértices 1 y 3, peso 4
-        graph.insertEdgeWeighted(2, 3, 1); // Vértices 2 y 3, peso 1
-        graph.insertEdgeWeighted(2, 4, 3); // Vértices 2 y 4, peso 3
-        graph.insertEdgeWeighted(3, 4, 5); // Vértices 3 y 4, peso 5
-        graph.insertEdgeWeighted(3, 5, 7); // Vértices 3 y 5, peso 7
-        graph.insertEdgeWeighted(4, 5, 6); // Vértices 4 y 5, peso 6
+        graph.insertEdgeWeight("A", "B", 2);
+        graph.insertEdgeWeight("A", "C", 3);
+        graph.insertEdgeWeight("B", "C", 1);
+        graph.insertEdgeWeight("B", "D", 4);
+        graph.insertEdgeWeight("C", "D", 2);
+        graph.insertEdgeWeight("D", "E", 4);
 
         try {
-            GraphLink<Integer> mst = graph.primMST();
-            System.out.println("Árbol de Expansión Mínima (MST):");
-            System.out.println(mst);
+            ArrayList<Edge<String>> mst = graph.primMST();
+            System.out.println("Árbol de Expansión Mínima usando Prim:");
+            for (Edge<String> edge : mst) {
+                System.out.println(edge.refDest.getData() + " : " + edge.getWeight());
+            }
         } catch (ExceptionIsEmpty e) {
-            System.out.println("Error: La cola de prioridad está vacía.");
+            e.printStackTrace();
         }
     }
 }

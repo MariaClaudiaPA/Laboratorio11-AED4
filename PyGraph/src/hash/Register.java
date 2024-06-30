@@ -32,6 +32,14 @@ public class Register<E> implements Comparable<Register<E>> {
         return value;
     }
 
+    public void setKey(int key) {
+        this.key = key;
+    }
+
+    public void setValue(E value) {
+        this.value = value;
+    }
+
     @Override
     public String toString() {
         return "[" + this.key + ":" + this.value.toString() + "]";

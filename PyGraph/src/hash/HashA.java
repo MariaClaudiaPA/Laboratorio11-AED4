@@ -1,11 +1,13 @@
 package hash;
 
+import listlinked.*;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class HashA<E extends Comparable<E>> {
+public class HashA<E> {
 
     protected ArrayList<ListLinked<Register<E>>> table;
     protected int m;
@@ -23,33 +25,46 @@ public class HashA<E extends Comparable<E>> {
     }
 
     private int functionHash(int key) {
-//        return (key % m) + (int) (Math.ceil(m * 0.4));
         return key % m;
     }
 
     public void insert(int key, Register<E> value) {
         int index = functionHash(key);
         ListLinked<Register<E>> list = table.get(index);
+        if (list == null) {
+            list = new ListLinked<>();
+            table.set(index, list);
+        }
         list.insert(value);
     }
+
 
     public Register<E> search(int key) {
         int index = functionHash(key);
         ListLinked<Register<E>> list = table.get(index);
+        if (list == null) {
+            return null;
+        }
         Register<E> aux = new Register<>(key, null);
         int searchIndex = list.search(aux);
+
         if (searchIndex != -1) {
             return list.get(searchIndex);
         }
         return null;
     }
 
+
     public Register<E> remove(int key) {
         int index = functionHash(key);
         ListLinked<Register<E>> list = table.get(index);
+        if (list == null) {
+            return null;
+        }
         Register<E> aux = new Register<>(key, null);
         return list.removeNode(aux);
     }
+
 
     @Override
     public String toString() {
@@ -61,7 +76,7 @@ public class HashA<E extends Comparable<E>> {
             if (list.isEmpty()) {
                 sb.append("vacio");
             } else {
-                Node<Register<E>> actual = list.primero;
+                Node<Register<E>> actual = list.getPrimero();
                 while (actual != null) {
                     Register<E> item = actual.getValor();
                     sb.append(functionHash(item.getKey())).append("\t").append(item).append("->");
@@ -74,14 +89,14 @@ public class HashA<E extends Comparable<E>> {
     }
 
     public void leerArchivo(String filePath) {
-        try ( BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             int contLineas = 0;
             while (br.readLine() != null) {
                 contLineas++;
             }
             HashA<E> nuevoHashA = new HashA<>(contLineas);
             br.close();
-            try ( BufferedReader br2 = new BufferedReader(new FileReader(filePath))) {
+            try (BufferedReader br2 = new BufferedReader(new FileReader(filePath))) {
                 String line;
                 while ((line = br2.readLine()) != null) {
                     String[] parts = line.split(",");
@@ -125,5 +140,6 @@ public class HashA<E extends Comparable<E>> {
         }
         return 2;
     }
+
 
 }
